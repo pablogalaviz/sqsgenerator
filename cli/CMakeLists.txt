@@ -8,7 +8,7 @@ project(sqsgenerator-cli)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (WITH_MPI)
     find_package(MPI REQUIRED)
@@ -32,13 +32,69 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" OR "${CMAKE_CXX_COMPILER_ID
     add_compile_options(-fexperimental-library)
 endif ()
 
-find_package(argparse CONFIG REQUIRED)
-find_package(Eigen3 CONFIG REQUIRED)
-find_package(absl CONFIG REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
-find_package(boost_multiprecision REQUIRED CONFIG)
-find_path(BS_THREAD_POOL_INCLUDE_DIRS "BS_thread_pool.hpp")
-include_directories("${CMAKE_SOURCE_DIR}/../include" ${BS_THREAD_POOL_INCLUDE_DIRS})
+FetchContent_Declare(
+        argparse
+        GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+)
+FetchContent_MakeAvailable(argparse)
+
+FetchContent_Declare(
+        Eigen3
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+)
+FetchContent_MakeAvailable(Eigen3)
+
+FetchContent_Declare(
+        absl
+        GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+)
+FetchContent_MakeAvailable(absl)
+
+FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+#set(BOOST_MP_STANDALONE ON)
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+
+#FetchContent_Declare(
+#        boost_multiprecision
+#        GIT_REPOSITORY https://github.com/boostorg/multiprecision.git
+#)
+#FetchContent_MakeAvailable(boost_multiprecision)
+
+FetchContent_Declare(
+        boost
+        GIT_REPOSITORY https://github.com/boostorg/boost.git
+)
+FetchContent_MakeAvailable(boost)
+
+
+FetchContent_Declare(
+        bshoshany_thread_pool
+        GIT_REPOSITORY https://github.com/bshoshany/thread-pool.git
+)
+FetchContent_MakeAvailable(bshoshany_thread_pool)
+add_library(BS_thread_pool INTERFACE)
+target_include_directories(BS_thread_pool INTERFACE ${bshoshany_thread_pool_SOURCE_DIR}/include)
+
+message(STATUS "boost dir ${boost_SOURCE_DIR}/include")
+
+#find_package(argparse CONFIG REQUIRED)
+#find_package(Eigen3 CONFIG REQUIRED)
+#find_package(absl CONFIG REQUIRED)
+#find_package(nlohmann_json CONFIG REQUIRED)
+#find_package(boost_multiprecision REQUIRED CONFIG)
+#find_path(BS_THREAD_POOL_INCLUDE_DIRS "BS_thread_pool.hpp")
+include_directories("${CMAKE_SOURCE_DIR}/../include"
+        "${bshoshany_thread_pool_SOURCE_DIR}/include"
+        "${argparse_SOURCE_DIR}/include"
+        "${boost_SOURCE_DIR}/include"
+)
 
 add_executable(sqsgen main.cpp progress.h helpers.h termcolor.h)
 target_link_libraries(sqsgen PRIVATE
@@ -54,6 +110,7 @@ target_link_libraries(sqsgen PRIVATE
         Eigen3::Eigen
         Boost::multiprecision
         argparse::argparse
+        BS_thread_pool
 )
 if (WITH_MPI)
     target_link_libraries(sqsgen PRIVATE ${MPI_LIBRARIES} mpl)
@@ -65,3 +122,4 @@ target_compile_definitions(sqsgen PRIVATE
         SQSGEN_MINOR_VERSION=${VERSION_MINOR}
         SQSGEN_MAJOR_VERSION=${VERSION_MAJOR}
 )
+target_compile_features(sqsgen PRIVATE cxx_std_20)

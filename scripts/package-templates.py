@@ -12,7 +12,7 @@ INCLUDES = [
 ]
 
 
-def format_author(author: dict) -> str:
+def format_author(author):
     name = author["name"] if "name" in author else "std::nullopt"
     surname = author["surname"] if "surname" in author else "std::nullopt"
     email = author["email"] if "email" in author else "std::nullopt"
@@ -34,7 +34,7 @@ config_template_author{{
     )
 
 
-def load_template(filename: str):
+def load_template(filename):
     with open(filename) as f:
         t = json.load(f)
     template_code = """

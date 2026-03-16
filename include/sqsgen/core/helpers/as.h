@@ -21,7 +21,14 @@ namespace sqsgen::core::helpers {
     template <ranges::range R> using return_t = std::vector<std::decay_t<ranges::range_value_t<R>>>;
 
     template <ranges::range R> return_t<R> operator()(R&& r) {
-      return return_t<R>{std::ranges::begin(r), std::ranges::end(r)};
+      return_t<R> result;
+      if constexpr (std::ranges::sized_range<R>) {
+        result.reserve(std::ranges::size(r));
+      }
+      for (auto&& e : r) {
+        result.push_back(std::forward<decltype(e)>(e));
+      }
+      return result;
     }
   };
 

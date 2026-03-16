@@ -11,6 +11,7 @@
 
 #include "sqsgen/core/structure.h"
 #include "sqsgen/io/json.h"
+#include <string_view>
 
 // PI is not defined on standard C++ headers when using MSVC
 #ifndef M_PI
